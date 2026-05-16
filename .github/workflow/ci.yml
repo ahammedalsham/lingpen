@@ -1,0 +1,395 @@
+name: LingPen CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-flight runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  POSTGRES_DB: lingpen_test
+  POSTGRES_USER: lingpen
+  POSTGRES_PASSWORD: test_password
+  DATABASE_URL: postgresql+asyncpg://lingpen:test_password@localhost:5432/lingpen_test
+
+# ─────────────────────────────────────────────
+# JOB 1 — Backend (FastAPI)
+# ─────────────────────────────────────────────
+jobs:
+  backend:
+    name: Backend — lint, type-check, test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Cache pip dependencies keyed on requirements files
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      # ── Lint ──────────────────────────────
+      - name: Ruff lint
+        run: ruff check . --output-format=github
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      # ── Type check ────────────────────────
+      - name: Mypy
+        run: mypy . --ignore-missing-imports
+
+      # ── Database migrations ───────────────
+      - name: Run Alembic migrations
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: alembic upgrade head
+
+      # ── Tests ─────────────────────────────
+      - name: Pytest with coverage
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          ENVIRONMENT: test
+        run: |
+          pytest \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-fail-under=70 \
+            -v \
+            --tb=short
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: backend/coverage.xml
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ─────────────────────────────────────────────
+  # JOB 2 — CoNLL-U Parser (critical path)
+  # ─────────────────────────────────────────────
+  conllu-parser:
+    name: CoNLL-U parser — unit tests
+    runs-on: ubuntu-latest
+    # Run independently of the full backend job so parser
+    # regressions surface fast (no DB needed)
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements*.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run parser + validator tests
+        run: |
+          pytest tests/test_conllu_parser.py \
+                 tests/test_conllu_validator.py \
+                 tests/test_conllu_export.py \
+            -v --tb=long
+        # These tests use the fixture files in tests/fixtures/
+        # Each fixture exercises a specific CoNLL-U edge case:
+        #   basic_ud.conllu        — standard tree
+        #   enhanced_ud.conllu     — DEPS column with multiple heads
+        #   multiword_tokens.conllu — 1-2 style (Malayalam copula splits)
+        #   empty_nodes.conllu     — 1.1 style (gapping)
+        #   malayalam_sample.conllu — real Malayalam sentences
+
+      - name: Round-trip lossless export test
+        run: |
+          python -m pytest tests/test_roundtrip.py -v
+        # Parses 20 CoNLL-U fixtures → stores to dict → exports back →
+        # asserts byte-for-byte equality (modulo normalised whitespace)
+
+  # ─────────────────────────────────────────────
+  # JOB 3 — Frontend (Next.js)
+  # ─────────────────────────────────────────────
+  frontend:
+    name: Frontend — lint, type-check, build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Lint ──────────────────────────────
+      - name: ESLint
+        run: npm run lint
+
+      # ── Type check ────────────────────────
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      # ── Unit tests (Vitest) ───────────────
+      - name: Vitest
+        run: npm run test -- --coverage --reporter=verbose
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
+      # ── Next.js build ─────────────────────
+      # Catches import errors, missing env vars (with defaults),
+      # and any build-time failures before they reach production
+      - name: Next.js build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-build-secret-not-for-production
+
+      - name: Upload Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/**/*.ts','frontend/**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-
+
+  # ─────────────────────────────────────────────
+  # JOB 4 — Integration tests (E2E)
+  # Only runs on pushes to main/develop, not every PR
+  # (too slow for PR feedback loops)
+  # ─────────────────────────────────────────────
+  integration:
+    name: Integration — upload/edit/export flow
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend deps
+        working-directory: backend
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Alembic migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: alembic upgrade head
+
+      - name: Start FastAPI server (background)
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          SECRET_KEY: ci-integration-secret
+          ENVIRONMENT: test
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
+          # Wait for the server to be ready
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8000/api/health && break
+            echo "Waiting for backend... ($i)"
+            sleep 2
+          done
+
+      - name: Run integration tests
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          API_BASE_URL: http://localhost:8000
+        run: |
+          pytest tests/integration/ -v --tb=short
+        # Integration test scenarios:
+        #   1. POST /api/auth/register  → create user
+        #   2. POST /api/auth/login     → get JWT
+        #   3. POST /api/treebanks      → create treebank
+        #   4. POST /api/treebanks/{id}/upload  → upload malayalam_sample.conllu
+        #   5. GET  /api/treebanks/{id}/sentences → verify sentence count
+        #   6. PUT  /api/tokens/{id}    → edit UPOS field, check revision logged
+        #   7. GET  /api/sentences/{id}/validate → check validation warnings
+        #   8. GET  /api/treebanks/{id}/export   → verify round-trip CoNLL-U
+
+  # ─────────────────────────────────────────────
+  # JOB 5 — Docker build check
+  # Ensures both images build without errors
+  # ─────────────────────────────────────────────
+  docker:
+    name: Docker — build images
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: lingpen-backend:ci
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: lingpen-frontend:ci
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:8000
+            NEXTAUTH_URL=http://localhost:3000
+
+  # ─────────────────────────────────────────────
+  # JOB 6 — Deploy to Hetzner VPS
+  # Only on push to main after all checks pass
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy — Hetzner VPS (production)
+    runs-on: ubuntu-latest
+    needs: [backend, conllu-parser, frontend, integration, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/lingpen
+
+            # Pull latest code
+            git pull origin main
+
+            # Pull and rebuild containers (zero-downtime via --no-deps)
+            docker compose pull
+            docker compose up -d --build --remove-orphans
+
+            # Run any pending Alembic migrations
+            docker compose exec -T backend alembic upgrade head
+
+            # Health check — wait up to 60s for API to respond
+            for i in $(seq 1 12); do
+              curl -sf https://lingpen.in/api/health && echo "✓ API healthy" && break
+              echo "Waiting for API... ($i/12)"
+              sleep 5
+            done
+
+            # Prune old images to save disk space on the VPS
+            docker image prune -f
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Production deploy failed. Check the [Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.'
+            })

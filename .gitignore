@@ -1,5 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+#python
+__pycache__/
+.venv/
+.env/
 # dependencies
 /node_modules
 /.pnp
@@ -39,3 +43,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Node & Next.js (Frontend)
+node_modules/
+.next/
+out/
+build/
+.env*.local
+
+# Python & FastAPI (Backend)
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+alembic.ini
+
+# Docker & OS
+.DS_Store
+Thumbs.db
