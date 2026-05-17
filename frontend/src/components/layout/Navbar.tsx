@@ -2,121 +2,300 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Menu, X, ChevronDown, Share2 } from 'lucide-react';
+import {
+  Search,
+  Bell,
+  Menu,
+  X,
+  ChevronDown,
+  BookOpen,
+  Database,
+  GraduationCap,
+  Users,
+  Globe,
+  User
+} from 'lucide-react';
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Handle scroll effect for shadow [cite: 1073]
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 15);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const navLinks = [
-    {
-      title: 'Explore',
-      items: ['Treebanks', 'Languages', 'Research']
+  const menus = {
+    research: {
+      icon: <BookOpen size={18} />,
+      description: "Scholarly publications, corpora and language datasets.",
+      sections: [
+        {
+          title: "Publications",
+          links: [
+            ["Peer Reviewed", "/papers"],
+            ["Preprints", "/preprints"],
+            ["Journals", "/journals"]
+          ]
+        },
+        {
+          title: "Language Data",
+          links: [
+            ["Treebanks", "/treebanks"],
+            ["Corpora", "/corpora"],
+            ["Syntax", "/syntax"]
+          ]
+        },
+        {
+          title: "Analytics",
+          links: [
+            ["Metrics", "/metrics"],
+            ["Citation Graphs", "/graphs"]
+          ]
+        }
+      ]
     },
-    {
-      title: 'Learn',
-      items: ['Courses', 'Exercises', 'Certification', 'Documentation']
+    infrastructure: {
+      icon: <Database size={18} />,
+      description: "Core computational systems and annotation infrastructure.",
+      sections: [
+        {
+          title: "Annotation",
+          links: [
+            ["CoNLL-U Editor", "/editor"],
+            ["Tree Visualizer", "/trees"]
+          ]
+        },
+        {
+          title: "Systems",
+          links: [
+            ["API", "/api"],
+            ["Parser Services", "/parser"]
+          ]
+        },
+        {
+          title: "Developer",
+          links: [
+            ["Github", "/github"],
+            ["Documentation", "/docs"]
+          ]
+        }
+      ]
     },
-    {
-      title: 'Community',
-      items: ['Blog', 'Discussions', 'Events', 'Magazine']
+    learn: {
+      icon: <GraduationCap size={18} />,
+      description: "Academic pathways and structured learning.",
+      sections: [
+        {
+          title: "Courses",
+          links: [
+            ["Syntax", "/syntax"],
+            ["Computational Linguistics", "/cl"]
+          ]
+        },
+        {
+          title: "Exercises",
+          links: [
+            ["Annotation Lab", "/lab"],
+            ["Practice Sets", "/practice"]
+          ]
+        }
+      ]
+    },
+    community: {
+      icon: <Users size={18} />,
+      description: "Research networks and scholarly communication.",
+      sections: [
+        {
+          title: "Networks",
+          links: [
+            ["Forums", "/forum"],
+            ["Groups", "/groups"]
+          ]
+        },
+        {
+          title: "Events",
+          links: [
+            ["Conferences", "/events"],
+            ["Workshops", "/workshops"]
+          ]
+        }
+      ]
     }
-  ];
+  };
 
   return (
-    <nav className={`fixed top-0 w-full h-16 z-50 transition-all duration-300 border-b border-[var(--color-neutral-200)] ${
-      isScrolled ? 'bg-white shadow-md' : 'bg-white'
-    }`}>
-      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-        
-        {/* Logo [cite: 1074] */}
-        <Link href="/" className="flex items-center space-x-2 group">
-          <div className="w-8 h-8 bg-[var(--color-indigo-primary)] rounded-lg flex items-center justify-center text-white group-hover:bg-[var(--color-indigo-dark)] transition-colors">
-            <Share2 className="w-5 h-5" />
+    <header className="sticky top-0 z-50 w-full flex flex-col select-none">
+      {/* Skip to Content Link for Layout Accessibility */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-0 focus:left-0 focus:bg-white focus:p-3 text-blue-900 font-semibold border-b-2 border-blue-900">
+        Skip to main content
+      </a>
+
+      {/* LAYER 1: TOP METADATA BAR */}
+      <div className="bg-slate-950 h-9 text-[11px] text-slate-400 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between font-mono">
+          <div className="hidden lg:flex gap-6">
+            <span>CORPORA:<strong className="text-white ml-1">142K</strong></span>
+            <span>PROJECTS:<strong className="text-white ml-1">41</strong></span>
+            <span>RELEASE:<strong className="text-white ml-1">2026.IV</strong></span>
           </div>
-          <span className="text-xl font-bold text-[var(--color-indigo-dark)]">LingPen</span>
-        </Link>
 
-        {/* Desktop Navigation [cite: 1075-1078] */}
-        <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-[var(--color-neutral-600)]">
-          {navLinks.map((link) => (
-            <div key={link.title} className="relative group cursor-pointer h-16 flex items-center">
-              <span className="flex items-center hover:text-[var(--color-indigo-primary)] transition-colors">
-                {link.title}
-                <ChevronDown className="w-4 h-4 ml-1 opacity-50 group-hover:rotate-180 transition-transform duration-200" />
-              </span>
-              
-              {/* Dropdown Menu */}
-              <div className="absolute top-16 left-0 min-w-[200px] bg-white border border-[var(--color-neutral-200)] shadow-lg rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col py-2">
-                {link.items.map((item) => (
-                  <Link key={item} href={`/${item.toLowerCase()}`} className="px-4 py-2 hover:bg-[var(--color-neutral-50)] hover:text-[var(--color-indigo-primary)] transition-colors">
-                    {item}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-          <Link href="/about" className="hover:text-[var(--color-indigo-primary)] transition-colors h-16 flex items-center">About</Link>
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-1 hover:text-white transition-colors">
+              <Globe size={12} />
+              EN
+            </button>
+            <Link href="/about" className="hover:text-white transition-colors">
+              About
+            </Link>
+          </div>
         </div>
-
-        {/* Right Actions [cite: 1079-1082] */}
-        <div className="hidden md:flex items-center space-x-6">
-          <button className="text-[var(--color-neutral-600)] hover:text-[var(--color-indigo-primary)] transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
-          <Link href="/login" className="text-sm font-medium text-[var(--color-neutral-600)] hover:text-[var(--color-indigo-primary)] transition-colors">
-            Sign In
-          </Link>
-          <Link href="/register" className="bg-[var(--color-indigo-primary)] text-white text-sm px-4 py-2 rounded-md font-bold hover:bg-[var(--color-indigo-light)] transition-colors">
-            Get Started
-          </Link>
-        </div>
-
-        {/* Mobile Menu Toggle [cite: 1083] */}
-        <button 
-          className="md:hidden text-[var(--color-neutral-600)]"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
       </div>
 
-      {/* Mobile Slide-over Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-[var(--color-neutral-200)] shadow-lg py-4 px-6 flex flex-col space-y-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          {navLinks.map((link) => (
-            <div key={link.title} className="flex flex-col space-y-2">
-              <span className="font-bold text-[var(--color-neutral-900)] border-b border-[var(--color-neutral-100)] pb-2">{link.title}</span>
-              <div className="flex flex-col pl-4 space-y-2">
-                {link.items.map((item) => (
-                  <Link key={item} href={`/${item.toLowerCase()}`} className="text-sm text-[var(--color-neutral-600)]">
-                    {item}
-                  </Link>
+      {/* LAYER 2: PRIMARY INTERACTIVE NAV BAR */}
+      <nav
+        className={`bg-white transition-all duration-300 border-b border-slate-200 relative ${
+          scrolled ? 'shadow-md h-16 bg-white/95 backdrop-blur-md' : 'h-20'
+        }`}
+        onMouseLeave={() => setActiveMenu(null)}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
+          
+          {/* Leftside Branding and Links */}
+          <div className="flex items-center gap-10 h-full">
+            <Link href="/" className="flex items-center gap-3 group outline-none">
+              <img src="/logo/lingpen_logo.png" className="h-10 w-auto object-contain" alt="LingPen Logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-blue-900 transition-colors">
+                  LingPen
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-bold leading-none mt-0.5">
+                  Language Research Infrastructure
+                </p>
+              </div>
+            </Link>
+
+            {/* Desktop Dynamic Key Layout Loop */}
+            <div className="hidden md:flex h-full items-center">
+              {Object.keys(menus).map((k) => (
+                <button
+                  key={k}
+                  onMouseEnter={() => setActiveMenu(k)}
+                  className={`h-full px-5 uppercase text-xs font-bold tracking-wider border-b-2 transition-all outline-none ${
+                    activeMenu === k
+                      ? 'border-blue-900 text-slate-950 bg-slate-50/40'
+                      : 'border-transparent text-slate-500 hover:text-slate-950 hover:border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="capitalize">{k}</span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${activeMenu === k ? "rotate-180 text-blue-900" : ""}`} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Controls Area */}
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center bg-slate-50 border border-slate-200 rounded-full px-4 py-2 focus-within:bg-white focus-within:border-slate-300 transition-all">
+              <Search size={15} className="text-slate-400" />
+              <input
+                placeholder="Search..."
+                className="bg-transparent outline-none w-40 ml-2 text-sm text-slate-900 placeholder-slate-400 font-mono"
+              />
+            </div>
+
+            <button className="relative p-1 text-slate-400 hover:text-slate-900 transition-colors" aria-label="Notifications">
+              <Bell size={18} />
+              <div className="absolute top-1 right-1 w-2 h-2 bg-blue-900 rounded-full ring-2 ring-white" />
+            </button>
+
+            <button className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors outline-none" aria-label="User profile config">
+              <User size={16} />
+            </button>
+
+            <button
+              className="md:hidden p-1 text-slate-600 hover:text-slate-900 transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle mobile drawer"
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* LAYER 3: DESKTOP MULTI-COLUMN MEGA MENU TRACK */}
+        {activeMenu && (
+          <div
+            className="hidden md:block absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-2xl z-40 animate-in fade-in slide-in-from-top-1 duration-100"
+            onMouseEnter={() => setActiveMenu(activeMenu)}
+          >
+            <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-4 gap-10">
+              <div className="border-r border-slate-100 pr-4">
+                <div className="flex items-center gap-2 text-lg font-bold text-slate-900 uppercase tracking-wide">
+                  {menus[activeMenu as keyof typeof menus].icon}
+                  <span className="capitalize">{activeMenu}</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-500 leading-relaxed">
+                  {menus[activeMenu as keyof typeof menus].description}
+                </p>
+              </div>
+
+              <div className="col-span-3 grid grid-cols-3 gap-8">
+                {menus[activeMenu as keyof typeof menus].sections.map((section, i) => (
+                  <div key={i}>
+                    <h3 className="uppercase font-mono text-[10px] tracking-widest text-slate-400 mb-4 font-bold border-b border-slate-100 pb-1">
+                      {section.title}
+                    </h3>
+                    <div className="space-y-3">
+                      {section.links.map(([label, href], j) => (
+                        <Link
+                          key={j}
+                          href={href}
+                          className="block text-sm text-slate-600 hover:text-blue-900 font-medium transition-colors"
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          ))}
-          <Link href="/about" className="font-bold text-[var(--color-neutral-900)] border-b border-[var(--color-neutral-100)] pb-2">About</Link>
-          
-          <div className="flex flex-col space-y-3 pt-4">
-            <Link href="/login" className="text-center text-sm font-medium text-[var(--color-neutral-600)] border border-[var(--color-neutral-200)] py-2 rounded-md">
-              Sign In
-            </Link>
-            <Link href="/register" className="text-center bg-[var(--color-indigo-primary)] text-white text-sm py-2 rounded-md font-bold">
-              Get Started
-            </Link>
+          </div>
+        )}
+      </nav>
+
+      {/* MOBILE FULL CONTENT ACCORDION BLOCK */}
+      {mobileOpen && (
+        <div className="md:hidden w-full bg-white border-b border-slate-200 max-h-[calc(100vh-6rem)] overflow-y-auto" id="mobile-menu">
+          <div className="px-4 py-4 space-y-4">
+            {Object.entries(menus).map(([key, value]) => (
+              <div key={key} className="space-y-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 px-1">
+                  {value.icon}
+                  <span className="capitalize">{key}</span>
+                </div>
+                <div className="pl-6 grid grid-cols-2 gap-4 pt-1">
+                  {value.sections.map((section, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="text-xs font-bold text-slate-800">{section.title}</div>
+                      {section.links.map(([label, href], id) => (
+                        <Link key={id} href={href} className="block text-xs text-slate-500 py-1 hover:text-blue-900 transition-colors">
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 }
