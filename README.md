@@ -1,36 +1,205 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LingPen - Linguistic Annotation Platform
 
-## Getting Started
+[![Backend Tests](https://github.com/ahammedalsham/LingPen/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/ahammedalsham/LingPen/actions)
+[![Frontend Tests](https://github.com/ahammedalsham/LingPen/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/ahammedalsham/LingPen/actions)
 
-First, run the development server:
+**LingPen** is a modern, collaborative web application for linguistic annotation and treebank management. It enables teams to work together on dependency parsing, morphological annotation, and other linguistic tasks.
+
+## 🎯 Features
+
+- **Collaborative Annotation**: Multiple annotators working on the same treebank simultaneously
+- **Version Control**: Complete audit trail of all changes with undo/redo capabilities
+- **Rich Linguistic Support**: Built for Indian languages (Malayalam, Hindi, Tamil, etc.)
+- **CoNLL-U Compatible**: Import/export standard CoNLL-U formatted treebanks
+- **Real-time Validation**: Live validation of CoNLL-U constraints
+- **Role-Based Access**: Annotators, reviewers, and admin roles with granular permissions
+
+## 🏗️ Architecture
+
+LingPen uses a modern full-stack architecture:
+
+- **Frontend**: Next.js 16 + React 19 + TypeScript + Tailwind CSS + Zustand
+- **Backend**: FastAPI + async SQLAlchemy 2.0 + PostgreSQL
+- **Deployment**: Docker Compose for development, Kubernetes-ready for production
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Docker** & **Docker Compose** (recommended)
+- OR **Python 3.10+**, **Node.js 18+**, **PostgreSQL 16**
+
+### Using Docker Compose (Recommended)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/ahammedalsham/LingPen.git
+cd lingpen
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your configuration
+nano .env
+
+# Start development environment
+docker-compose up -d
+
+# Check status
+docker-compose ps
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Access the application:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/api/docs
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Local Development Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### Backend Setup
 
-## Learn More
+```bash
+cd backend
 
-To learn more about Next.js, take a look at the following resources:
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Setup environment variables
+cp .env.example .env
 
-## Deploy on Vercel
+# Run server
+uvicorn app.main:app --reload --port 8000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Frontend Setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env.local
+
+# Start development server
+npm run dev
+```
+
+## 📖 Documentation
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design and technical decisions
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+pytest tests/ -v --cov=app
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+npm test
+```
+
+## 🔒 Security
+
+- **Environment Variables**: All secrets via `.env` files (never commit to git)
+- **Password Hashing**: bcrypt for secure storage
+- **JWT Tokens**: Stateless authentication
+- **CORS**: Restricted to trusted origins
+- **Input Validation**: Pydantic schemas
+- **SQL Injection Protection**: SQLAlchemy with parameterized queries
+
+## 📋 Environment Configuration
+
+Create a `.env` file:
+
+```bash
+# Database
+DATABASE_URL=postgresql+asyncpg://lingpen:password@localhost:5432/lingpen
+
+# Environment
+ENVIRONMENT=development
+DEBUG=true
+
+# Security
+JWT_SECRET=your-secret-key-change-in-production
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+- Code style guidelines
+- Git workflow
+- Pull request process
+- Testing requirements
+
+## 📝 API Documentation
+
+- **Swagger UI**: http://localhost:8000/api/docs
+- **ReDoc**: http://localhost:8000/api/redoc
+
+## 🐛 Troubleshooting
+
+### Backend issues
+
+```bash
+# Check logs
+docker-compose logs backend
+
+# Rebuild container
+docker-compose up --build backend
+```
+
+### Frontend can't reach API
+
+- Check `NEXT_PUBLIC_API_URL` in `.env.local`
+- Ensure backend is running on port 8000
+- Check CORS settings
+
+## 📊 Performance
+
+- Async I/O throughout
+- Connection pooling (10 connections)
+- Zustand for efficient state management
+- Next.js code splitting & optimization
+
+## 🚢 Deployment
+
+Production deployment:
+1. Update `.env` with production values
+2. Use `docker-compose.prod.yml`
+3. Deploy with Kubernetes or Docker Swarm
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed guide.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 👥 Authors
+
+- **Hamad Alsham** - Initial development
+
+## 📞 Contact & Support
+
+- **Issues**: [GitHub Issues](https://github.com/ahammedalsham/LingPen/issues)
+- **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+---
+
+**Made with ❤️ for linguistic research and annotation**

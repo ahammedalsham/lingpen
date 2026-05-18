@@ -12,14 +12,12 @@ import EducationPathway from '@/components/home/EducationPathway';
 import StatsStrip from '@/components/home/StatsStrip';
 import FeaturedTreebank from '@/components/home/FeaturedTreebank';
 import CallToAction from '@/components/home/CallToAction';
-import DependencyGraph from '@/components/home/LiveAnnotationDemo';
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-neutral-50 font-sans">
       <Navbar />
       <Hero />
-      <DependencyGraph />
       <ProblemStatement />
       <PlatformOverview />
       <InteractiveDemo />

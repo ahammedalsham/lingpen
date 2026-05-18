@@ -40,8 +40,7 @@ export default function Hero() {
         transition={{ duration: 1.5 }}
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage:
-            "url('/Gemini_Generated_Image_3o0pqv3o0pqv3o0p.png')"
+          backgroundImage: "url('/Gemini_Generated_Image_3o0pqv3o0pqv3o0p.png')"
         }}
       />
 
@@ -108,7 +107,7 @@ export default function Hero() {
 
             <motion.h1
               variants={itemVariants}
-              className="text-white text-5xl md:text-6xl xl:text-7xl leading-[1.05] tracking-tight font-serif font-semibold"
+              className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tighter"
             >
               Language is the{" "}
               <span className="text-blue-400">
@@ -191,21 +190,20 @@ export default function Hero() {
           </motion.div>
 
 
-
           {/* RIGHT SIDE */}
 
           <motion.div
             initial={{
-              opacity:0,
-              x:40
+              opacity: 0,
+              x: 40
             }}
             animate={{
-              opacity:1,
-              x:0
+              opacity: 1,
+              x: 0
             }}
             transition={{
-              duration:1,
-              delay:.6
+              duration: 1,
+              delay: 0.6
             }}
             className="hidden lg:block"
           >
@@ -223,7 +221,6 @@ export default function Hero() {
             duration-500
             group
             ">
-
 
               {/* top bar */}
 
@@ -243,12 +240,12 @@ export default function Hero() {
                 <div className="flex items-center gap-3">
 
                   <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/70"/>
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70"/>
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70"/>
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
                   </div>
 
-                  <div className="h-4 w-px bg-white/10"/>
+                  <div className="h-4 w-px bg-white/10" />
 
                   <span className="text-[11px] text-slate-500 font-mono">
                     English UD v2.12
@@ -267,7 +264,7 @@ export default function Hero() {
 
                 <div className="flex items-center gap-2 bg-emerald-500/15 px-2.5 py-1.5 rounded border border-emerald-500/30">
 
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"/>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
 
                   <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">
                     LIVE
@@ -323,7 +320,6 @@ export default function Hero() {
               </div>
 
 
-
               {/* live animation */}
 
               <div className="bg-gradient-to-b from-transparent to-black/20">
@@ -331,7 +327,6 @@ export default function Hero() {
                 <LiveAnnotationDemo />
 
               </div>
-
 
 
               {/* bottom status */}
