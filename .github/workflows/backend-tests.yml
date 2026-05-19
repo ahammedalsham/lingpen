@@ -10,6 +10,8 @@ on:
     branches: [ main, develop ]
     paths:
       - 'backend/**'
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
