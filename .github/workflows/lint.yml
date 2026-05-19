@@ -35,7 +35,7 @@ jobs:
         run: |
           cd backend
           ruff check .
-          black --check .
+          ruff format --check .
 
       - name: Install frontend dependencies
         run: |
