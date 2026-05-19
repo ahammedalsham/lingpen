@@ -18,7 +18,7 @@ export default function LanguageEcosystem() {
 
           <FadeIn delay={0.3}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-               {['Hindi', 'Malayalam', 'Tamil', 'Bengali'].map((lang, index) => (
+               {['Hindi', 'Malayalam', 'Tamil', 'Bengali'].map((lang) => (
                  <div key={lang} className="bg-white/10 hover:bg-white/15 transition-colors p-6 rounded-xl border border-white/10 cursor-pointer group">
                    <h4 className="font-bold text-lg group-hover:text-amber transition-colors">{lang}</h4>
                    <div className="flex items-center mt-2">
