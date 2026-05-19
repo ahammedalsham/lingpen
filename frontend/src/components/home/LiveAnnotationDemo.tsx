@@ -123,7 +123,8 @@ export default function LiveAnnotationDemo() {
 
             const x1 = startX + (arc.from - 1) * spacing;
             const x2 = startX + (arc.to - 1) * spacing;
-            const y = baseline - (arc.level * 35);
+            const level = arc.level ?? 0;
+            const y = baseline - level * 35;
 
             return (
               <motion.g

@@ -15,7 +15,7 @@ import CallToAction from '@/components/home/CallToAction';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-neutral-50 font-sans">
+    <main id="main-content" className="min-h-screen bg-neutral-50 font-sans">
       <Navbar />
       <Hero />
       <ProblemStatement />

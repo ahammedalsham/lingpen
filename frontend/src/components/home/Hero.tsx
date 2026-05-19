@@ -1,6 +1,8 @@
 'use client';
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { ROUTES } from "@/config/routes";
 import LiveAnnotationDemo from "./LiveAnnotationDemo";
 
 export default function Hero() {
@@ -25,7 +27,7 @@ export default function Hero() {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1]
+        ease: [0.16, 1, 0.3, 1] as const
       }
     }
   };
@@ -134,16 +136,19 @@ export default function Hero() {
               className="mt-12 flex flex-col sm:flex-row gap-5"
             >
 
-              <button className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg font-semibold transition-all duration-300 shadow-[0_10px_40px_rgba(37,99,235,.3)] hover:shadow-[0_15px_50px_rgba(37,99,235,.4)] hover:-translate-y-1 active:translate-y-0">
+              <Link
+                href={ROUTES.REGISTER}
+                className="group inline-flex justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg font-semibold transition-all duration-300 shadow-[0_10px_40px_rgba(37,99,235,.3)] hover:shadow-[0_15px_50px_rgba(37,99,235,.4)] hover:-translate-y-1 active:translate-y-0"
+              >
                 Begin Annotation
-              </button>
+              </Link>
 
-              <a
+              <Link
                 href="/treebanks"
                 className="flex justify-center items-center px-8 py-4 border border-white/20 rounded-lg text-white hover:bg-white/[0.08] hover:border-white/30 transition-all duration-300 font-medium backdrop-blur-sm"
               >
                 Explore Treebanks
-              </a>
+              </Link>
 
             </motion.div>
 
@@ -222,11 +227,11 @@ export default function Hero() {
             group
             ">
 
-              {/* top bar */}
+              {/* top bar - reduced padding */}
 
               <div className="
-              px-6
-              py-3.5
+              px-5
+              py-2.5
               border-b
               border-white/10
               flex
@@ -275,11 +280,11 @@ export default function Hero() {
               </div>
 
 
-              {/* sentence */}
+              {/* sentence - reduced padding */}
 
               <div className="
-              px-6
-              py-5
+              px-5
+              py-3.5
               border-b
               border-white/5
               bg-gradient-to-b
@@ -287,7 +292,7 @@ export default function Hero() {
               to-white/[0.01]
               flex
               items-baseline
-              gap-4
+              gap-3
               ">
 
                 <span className="
@@ -300,7 +305,7 @@ export default function Hero() {
                   sent_001
                 </span>
 
-                <span className="text-[15px] text-slate-200 leading-relaxed">
+                <span className="text-[14px] text-slate-200 leading-relaxed">
 
                   LingPen is an{" "}
 
@@ -329,7 +334,7 @@ export default function Hero() {
               </div>
 
 
-              {/* bottom status */}
+              {/* bottom status - reduced padding */}
 
               <div className="
               grid
@@ -343,7 +348,7 @@ export default function Hero() {
               divide-white/10
               ">
 
-                <div className="p-5">
+                <div className="p-4">
 
                   <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-medium">
                     Active Token
@@ -351,13 +356,13 @@ export default function Hero() {
 
                   <div className="flex items-center gap-2">
 
-                    <span className="text-white font-semibold">
+                    <span className="text-white font-semibold text-sm">
                       annotation
                     </span>
 
                     <span className="
                     px-2
-                    py-1
+                    py-0.5
                     rounded
                     text-[9px]
                     font-mono
@@ -373,7 +378,7 @@ export default function Hero() {
                 </div>
 
 
-                <div className="p-5">
+                <div className="p-4">
 
                   <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-medium">
                     Morphological Features
@@ -394,7 +399,7 @@ export default function Hero() {
                 </div>
 
 
-                <div className="p-5">
+                <div className="p-4">
 
                   <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-medium">
                     Head & Relation

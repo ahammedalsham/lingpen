@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ROUTES } from '@/config/routes';
 import {
   Search,
   Bell,
@@ -199,7 +200,21 @@ export default function Navbar() {
           </div>
 
           {/* Right Controls Area */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href={ROUTES.LOGIN}
+                className="text-sm font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                href={ROUTES.REGISTER}
+                className="text-sm font-semibold text-white bg-blue-900 hover:bg-blue-950 px-4 py-2 rounded-md shadow-sm transition-colors"
+              >
+                Register
+              </Link>
+            </div>
             <div className="hidden lg:flex items-center bg-slate-50 border border-slate-200 rounded-full px-4 py-2 focus-within:bg-white focus-within:border-slate-300 transition-all">
               <Search size={15} className="text-slate-400" />
               <input
@@ -273,6 +288,22 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden w-full bg-white border-b border-slate-200 max-h-[calc(100vh-6rem)] overflow-y-auto" id="mobile-menu">
           <div className="px-4 py-4 space-y-4">
+            <div className="flex gap-2 sm:hidden pb-2 border-b border-slate-100">
+              <Link
+                href={ROUTES.LOGIN}
+                className="flex-1 text-center text-sm font-semibold text-slate-700 border border-slate-200 rounded-md py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                Sign in
+              </Link>
+              <Link
+                href={ROUTES.REGISTER}
+                className="flex-1 text-center text-sm font-semibold text-white bg-blue-900 rounded-md py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                Register
+              </Link>
+            </div>
             {Object.entries(menus).map(([key, value]) => (
               <div key={key} className="space-y-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 px-1">
