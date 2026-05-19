@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
+import Image from "next/image";
 import {
   Search,
   Bell,
@@ -167,7 +168,13 @@ export default function Navbar() {
           {/* Leftside Branding and Links */}
           <div className="flex items-center gap-10 h-full">
             <Link href="/" className="flex items-center gap-3 group outline-none">
-              <img src="/logo/lingpen_logo.png" className="h-10 w-auto object-contain" alt="LingPen Logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <Image 
+                src="/your-logo.png" 
+                alt="Logo" 
+                width={32} 
+                height={32} 
+                className="h-8 w-8" 
+              />
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-blue-900 transition-colors">
                   LingPen
