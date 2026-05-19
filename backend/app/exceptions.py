@@ -5,8 +5,9 @@ Custom exception classes for the application.
 These are mapped to HTTP responses by the global exception handler.
 """
 
+from typing import Any
+
 from fastapi import status
-from typing import Optional, Any, Dict
 
 
 class APIException(Exception):
@@ -16,8 +17,8 @@ class APIException(Exception):
         self,
         message: str,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.status_code = status_code
@@ -29,7 +30,7 @@ class APIException(Exception):
 class ValidationException(APIException):
     """Raised when request validation fails."""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -63,7 +64,7 @@ class AuthorizationException(APIException):
 class NotFound(APIException):
     """Raised when resource is not found."""
 
-    def __init__(self, resource: str, resource_id: Optional[Any] = None):
+    def __init__(self, resource: str, resource_id: Any | None = None):
         message = f"{resource} not found"
         if resource_id:
             message = f"{resource} with id {resource_id} not found"
@@ -77,7 +78,7 @@ class NotFound(APIException):
 class ConflictException(APIException):
     """Raised when resource already exists or conflicts with existing data."""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             status_code=status.HTTP_409_CONFLICT,

@@ -6,16 +6,15 @@ Run this once during development: python init_db.py (from backend directory)
 """
 
 import asyncio
-import sys
 import os
-from pathlib import Path
+import sys
 
 # Add current directory to path for app imports
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.core.database import engine
-from app.models import Base
 from app.logging_config import logger
+from app.models import Base
 
 
 async def init_db():

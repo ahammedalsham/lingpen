@@ -8,9 +8,11 @@ Run with:
     DATABASE_URL=postgresql+asyncpg://... API_BASE_URL=http://localhost:8000 \
     pytest tests/integration/ -v
 """
+
 import os
-import pytest
+
 import httpx
+import pytest
 
 BASE = os.environ.get("API_BASE_URL", "http://localhost:8000")
 
@@ -27,18 +29,20 @@ def client():
 @pytest.fixture(scope="module")
 def auth_token(client):
     """Register a test user and return a JWT."""
-    resp = client.post("/api/auth/register", json={
-        "email": "ci_test@lingpen.in",
-        "username": "ci_tester",
-        "password": "Str0ngP@ssword!"
-    })
+    resp = client.post(
+        "/api/auth/register",
+        json={
+            "email": "ci_test@lingpen.in",
+            "username": "ci_tester",
+            "password": "Str0ngP@ssword!",
+        },
+    )
     # 201 on success, 409 if user exists from a previous run
     assert resp.status_code in (201, 409)
 
-    resp = client.post("/api/auth/login", json={
-        "email": "ci_test@lingpen.in",
-        "password": "Str0ngP@ssword!"
-    })
+    resp = client.post(
+        "/api/auth/login", json={"email": "ci_test@lingpen.in", "password": "Str0ngP@ssword!"}
+    )
     assert resp.status_code == 200
     return resp.json()["access_token"]
 
@@ -57,11 +61,14 @@ class TestCoreAnnotationFlow:
         assert r.json()["status"] == "ok"
 
     def test_create_treebank(self, authed):
-        r = authed.post("/api/treebanks", json={
-            "name": "CI Malayalam Test",
-            "language_iso": "mal",
-            "description": "Integration test treebank",
-        })
+        r = authed.post(
+            "/api/treebanks",
+            json={
+                "name": "CI Malayalam Test",
+                "language_iso": "mal",
+                "description": "Integration test treebank",
+            },
+        )
         assert r.status_code == 201
         self.__class__.treebank_id = r.json()["id"]
 
@@ -70,7 +77,7 @@ class TestCoreAnnotationFlow:
         with open(FIXTURE_PATH, "rb") as f:
             r = authed.post(
                 f"/api/treebanks/{tid}/upload",
-                files={"file": ("malayalam_sample.conllu", f, "text/plain")}
+                files={"file": ("malayalam_sample.conllu", f, "text/plain")},
             )
         assert r.status_code == 200
         body = r.json()
@@ -123,10 +130,7 @@ class TestCoreAnnotationFlow:
         content = r.text
 
         # Every non-comment, non-blank line must have exactly 9 tabs (10 fields)
-        token_lines = [
-            line for line in content.splitlines()
-            if line and not line.startswith("#")
-        ]
+        token_lines = [line for line in content.splitlines() if line and not line.startswith("#")]
         assert len(token_lines) > 0
         for line in token_lines:
             fields = line.split("\t")

@@ -6,7 +6,8 @@ Pytest configuration and shared fixtures for all tests.
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.config import settings
 from app.core.database import Base
 
@@ -22,15 +23,15 @@ async def test_db_engine():
         echo=False,
         future=True,
     )
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -43,7 +44,7 @@ async def test_session(test_db_engine):
         expire_on_commit=False,
         autoflush=False,
     )
-    
+
     async with async_session_local() as session:
         yield session
 

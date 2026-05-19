@@ -5,7 +5,6 @@ Async SQLAlchemy engine, session factory, and FastAPI dependency.
 Uses environment variables for database URL configuration.
 """
 
-import os
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -15,7 +14,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import settings
-
 
 # Create async engine with connection pooling
 engine = create_async_engine(
@@ -40,7 +38,7 @@ AsyncSessionLocal = async_sessionmaker(
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency that yields one AsyncSession per request.
-    
+
     The session is committed on success and rolled back on any exception.
     """
     async with AsyncSessionLocal() as session:

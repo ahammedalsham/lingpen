@@ -6,10 +6,9 @@ All environment variables are validated on app startup.
 """
 
 import os
-from typing import List
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings
-from functools import lru_cache
 
 
 class Settings(BaseSettings):
@@ -25,7 +24,7 @@ class Settings(BaseSettings):
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     # CORS
-    cors_origins: List[str] = [
+    cors_origins: list[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
         "http://127.0.0.1:3000",
@@ -56,7 +55,7 @@ class Settings(BaseSettings):
         return self.environment.lower() == "development"
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()

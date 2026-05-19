@@ -45,7 +45,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -59,13 +58,14 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-
 # ──────────────────────────────────────────────────────────────
 # Base
 # ──────────────────────────────────────────────────────────────
 
+
 class Base(DeclarativeBase):
     """Shared declarative base for all LingPen models."""
+
     type_annotation_map = {
         dict[str, Any]: JSONB,
         list[Any]: JSONB,
@@ -76,36 +76,37 @@ class Base(DeclarativeBase):
 # Enums
 # ──────────────────────────────────────────────────────────────
 
+
 class UserRole(str, enum.Enum):
-    ANNOTATOR = "annotator"   # can edit DRAFT sentences they are assigned
-    REVIEWER  = "reviewer"    # can approve / reject UNDER_REVIEW sentences
-    ADMIN     = "admin"       # full access within a treebank
-    SUPERUSER = "superuser"   # platform-level admin (LingPen team only)
+    ANNOTATOR = "annotator"  # can edit DRAFT sentences they are assigned
+    REVIEWER = "reviewer"  # can approve / reject UNDER_REVIEW sentences
+    ADMIN = "admin"  # full access within a treebank
+    SUPERUSER = "superuser"  # platform-level admin (LingPen team only)
 
 
 class AnnotationStatus(str, enum.Enum):
-    DRAFT        = "draft"         # being edited by annotator
+    DRAFT = "draft"  # being edited by annotator
     UNDER_REVIEW = "under_review"  # submitted; awaiting reviewer decision
-    APPROVED     = "approved"      # reviewer has accepted the annotation
-    REJECTED     = "rejected"      # reviewer requested changes (→ back to DRAFT)
+    APPROVED = "approved"  # reviewer has accepted the annotation
+    REJECTED = "rejected"  # reviewer requested changes (→ back to DRAFT)
 
 
 class ValidationSeverity(str, enum.Enum):
-    ERROR   = "error"    # blocks export (e.g. dependency cycle)
+    ERROR = "error"  # blocks export (e.g. dependency cycle)
     WARNING = "warning"  # non-blocking (e.g. unusual deprel for UPOS)
-    INFO    = "info"     # informational (e.g. rare construction flagged)
+    INFO = "info"  # informational (e.g. rare construction flagged)
 
 
 class ChangeType(str, enum.Enum):
-    EDIT   = "edit"    # normal field change
+    EDIT = "edit"  # normal field change
     REVERT = "revert"  # field rolled back to a prior value
     IMPORT = "import"  # set during CoNLL-U file import (no prior value)
 
 
 class MemberRole(str, enum.Enum):
     ANNOTATOR = "annotator"
-    REVIEWER  = "reviewer"
-    ADMIN     = "admin"
+    REVIEWER = "reviewer"
+    ADMIN = "admin"
 
 
 class ScriptDirection(str, enum.Enum):
@@ -117,8 +118,10 @@ class ScriptDirection(str, enum.Enum):
 # Timestamp mixin
 # ──────────────────────────────────────────────────────────────
 
+
 class TimestampMixin:
     """Adds created_at / updated_at to any model."""
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -136,6 +139,7 @@ class TimestampMixin:
 # TABLE: users
 # ══════════════════════════════════════════════════════════════
 
+
 class User(TimestampMixin, Base):
     """
     A registered LingPen account.
@@ -143,6 +147,7 @@ class User(TimestampMixin, Base):
     Roles are platform-wide defaults; per-treebank roles are held in
     TreebankMember.  A SUPERUSER can manage the platform itself.
     """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -215,6 +220,7 @@ class User(TimestampMixin, Base):
 # TABLE: languages
 # ══════════════════════════════════════════════════════════════
 
+
 class Language(Base):
     """
     Language registry entry.
@@ -227,6 +233,7 @@ class Language(Base):
         family="Dravidian", direction="ltr",
         metadata={"ud_treebanks": ["UD_Malayalam-MTB"], "wals_code": "mal"}
     """
+
     __tablename__ = "languages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -280,6 +287,7 @@ class Language(Base):
 # TABLE: treebanks
 # ══════════════════════════════════════════════════════════════
 
+
 class Treebank(TimestampMixin, Base):
     """
     A versioned, named corpus — the top-level container for LingPen data.
@@ -290,6 +298,7 @@ class Treebank(TimestampMixin, Base):
     `version` follows UD versioning conventions, e.g. "2.14".
     `license` should be a SPDX identifier, e.g. "CC-BY-SA-4.0".
     """
+
     __tablename__ = "treebanks"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -338,26 +347,26 @@ class Treebank(TimestampMixin, Base):
     )
 
     # ── Relationships ────────────────────────────────────────
-    language:  Mapped[Language]             = relationship(back_populates="treebanks")
-    owner:     Mapped[User]                 = relationship(
+    language: Mapped[Language] = relationship(back_populates="treebanks")
+    owner: Mapped[User] = relationship(
         back_populates="owned_treebanks",
         foreign_keys=[owner_id],
     )
-    members:   Mapped[list[TreebankMember]] = relationship(back_populates="treebank",
-                                                           cascade="all, delete-orphan")
-    documents: Mapped[list[Document]]       = relationship(back_populates="treebank",
-                                                           cascade="all, delete-orphan",
-                                                           order_by="Document.doc_order")
+    members: Mapped[list[TreebankMember]] = relationship(
+        back_populates="treebank", cascade="all, delete-orphan"
+    )
+    documents: Mapped[list[Document]] = relationship(
+        back_populates="treebank", cascade="all, delete-orphan", order_by="Document.doc_order"
+    )
 
     # ── Constraints ──────────────────────────────────────────
-    __table_args__ = (
-        UniqueConstraint("owner_id", "name", name="uq_treebank_owner_name"),
-    )
+    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_treebank_owner_name"),)
 
 
 # ══════════════════════════════════════════════════════════════
 # TABLE: treebank_members  (collaboration join table)
 # ══════════════════════════════════════════════════════════════
+
 
 class TreebankMember(Base):
     """
@@ -369,6 +378,7 @@ class TreebankMember(Base):
     Sentences assigned to a specific member are tracked via
     Sentence.assigned_to (not here).
     """
+
     __tablename__ = "treebank_members"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -398,19 +408,20 @@ class TreebankMember(Base):
 
     # ── Relationships ────────────────────────────────────────
     treebank: Mapped[Treebank] = relationship(back_populates="members")
-    user:     Mapped[User]     = relationship(back_populates="memberships")
+    user: Mapped[User] = relationship(back_populates="memberships")
 
     # ── Constraints ──────────────────────────────────────────
     __table_args__ = (
         UniqueConstraint("treebank_id", "user_id", name="uq_member_treebank_user"),
         Index("ix_treebank_members_treebank", "treebank_id"),
-        Index("ix_treebank_members_user",     "user_id"),
+        Index("ix_treebank_members_user", "user_id"),
     )
 
 
 # ══════════════════════════════════════════════════════════════
 # TABLE: documents
 # ══════════════════════════════════════════════════════════════
+
 
 class Document(TimestampMixin, Base):
     """
@@ -420,6 +431,7 @@ class Document(TimestampMixin, Base):
     `doc_order` controls display order within the treebank.
     `metadata_` stores provenance: original filename, publication, URL, etc.
     """
+
     __tablename__ = "documents"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -457,7 +469,7 @@ class Document(TimestampMixin, Base):
     )
 
     # ── Relationships ────────────────────────────────────────
-    treebank:  Mapped[Treebank]      = relationship(back_populates="documents")
+    treebank: Mapped[Treebank] = relationship(back_populates="documents")
     sentences: Mapped[list[Sentence]] = relationship(
         back_populates="document",
         cascade="all, delete-orphan",
@@ -465,14 +477,13 @@ class Document(TimestampMixin, Base):
     )
 
     # ── Indexes ──────────────────────────────────────────────
-    __table_args__ = (
-        Index("ix_documents_treebank_order", "treebank_id", "doc_order"),
-    )
+    __table_args__ = (Index("ix_documents_treebank_order", "treebank_id", "doc_order"),)
 
 
 # ══════════════════════════════════════════════════════════════
 # TABLE: sentences
 # ══════════════════════════════════════════════════════════════
+
 
 class Sentence(TimestampMixin, Base):
     """
@@ -487,6 +498,7 @@ class Sentence(TimestampMixin, Base):
     `locked_by` / `lock_expires_at` — optimistic lock to prevent concurrent edits.
     `metadata_` — all other # key = value comments from the CoNLL-U source.
     """
+
     __tablename__ = "sentences"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -549,28 +561,28 @@ class Sentence(TimestampMixin, Base):
     )
 
     # ── Relationships ────────────────────────────────────────
-    document:            Mapped[Document]                  = relationship(back_populates="sentences")
-    tokens:              Mapped[list[Token]]               = relationship(
+    document: Mapped[Document] = relationship(back_populates="sentences")
+    tokens: Mapped[list[Token]] = relationship(
         back_populates="sentence",
         cascade="all, delete-orphan",
         order_by="Token.token_order",
     )
-    validation_reports:  Mapped[list[ValidationReport]]    = relationship(
+    validation_reports: Mapped[list[ValidationReport]] = relationship(
         back_populates="sentence",
         cascade="all, delete-orphan",
     )
-    assignee:            Mapped[User | None]               = relationship(
+    assignee: Mapped[User | None] = relationship(
         foreign_keys=[assigned_to],
     )
-    lock_holder:         Mapped[User | None]               = relationship(
+    lock_holder: Mapped[User | None] = relationship(
         foreign_keys=[locked_by],
     )
 
     # ── Indexes ──────────────────────────────────────────────
     __table_args__ = (
-        Index("ix_sentences_document_order",  "document_id", "sent_order"),
-        Index("ix_sentences_status",          "annotation_status"),
-        Index("ix_sentences_assigned",        "assigned_to"),
+        Index("ix_sentences_document_order", "document_id", "sent_order"),
+        Index("ix_sentences_status", "annotation_status"),
+        Index("ix_sentences_assigned", "assigned_to"),
         # GIN index on metadata JSONB for # key = value comment search (Phase 4)
         Index(
             "ix_sentences_metadata_gin",
@@ -583,6 +595,7 @@ class Sentence(TimestampMixin, Base):
 # ══════════════════════════════════════════════════════════════
 # TABLE: tokens
 # ══════════════════════════════════════════════════════════════
+
 
 class Token(Base):
     """
@@ -605,6 +618,7 @@ class Token(Base):
     created_by is set to the importing user on bulk import; to the editing
     user when a field is first changed after import.
     """
+
     __tablename__ = "tokens"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -624,7 +638,7 @@ class Token(Base):
         Integer,
         nullable=False,
         comment="Numeric sort key: 10000*int_part + decimal_part. "
-                "E.g. '1'→10000, '1-2'→10000, '1.1'→10001, '2'→20000",
+        "E.g. '1'→10000, '1-2'→10000, '1.1'→10001, '2'→20000",
     )
     form: Mapped[str | None] = mapped_column(
         Text,
@@ -693,12 +707,12 @@ class Token(Base):
     )
 
     # ── Relationships ────────────────────────────────────────
-    sentence:            Mapped[Sentence]                   = relationship(back_populates="tokens")
-    creator:             Mapped[User | None]                = relationship(
+    sentence: Mapped[Sentence] = relationship(back_populates="tokens")
+    creator: Mapped[User | None] = relationship(
         back_populates="created_tokens",
         foreign_keys=[created_by],
     )
-    annotation_revisions: Mapped[list[AnnotationRevision]]  = relationship(
+    annotation_revisions: Mapped[list[AnnotationRevision]] = relationship(
         back_populates="token",
         cascade="all, delete-orphan",
         order_by="AnnotationRevision.timestamp",
@@ -708,11 +722,9 @@ class Token(Base):
     __table_args__ = (
         # Primary lookup: all tokens for a sentence in order
         Index("ix_tokens_sentence_order", "sentence_id", "token_order"),
-
         # Corpus search queries (Phase 4)
-        Index("ix_tokens_upos",    "upos"),
-        Index("ix_tokens_deprel",  "deprel"),
-
+        Index("ix_tokens_upos", "upos"),
+        Index("ix_tokens_deprel", "deprel"),
         # JSONB GIN indexes — enable fast FEATS and DEPS pattern search
         # e.g. WHERE feats @> '{"VerbForm": "Vnoun"}'
         # e.g. WHERE deps @> '[{"rel": "nsubj:pass"}]'
@@ -738,6 +750,7 @@ class Token(Base):
 # TABLE: annotation_revisions
 # ══════════════════════════════════════════════════════════════
 
+
 class AnnotationRevision(Base):
     """
     Immutable audit log of every field change on every token.
@@ -760,6 +773,7 @@ class AnnotationRevision(Base):
     by timestamp.  The revert action inserts a new REVERT revision rather than
     deleting the earlier EDIT — the log is append-only.
     """
+
     __tablename__ = "annotation_revisions"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -811,10 +825,10 @@ class AnnotationRevision(Base):
     )
 
     # ── Relationships ────────────────────────────────────────
-    token:            Mapped[Token]                     = relationship(
+    token: Mapped[Token] = relationship(
         back_populates="annotation_revisions",
     )
-    changed_by_user:  Mapped[User | None]               = relationship(
+    changed_by_user: Mapped[User | None] = relationship(
         back_populates="annotation_revisions",
         foreign_keys=[changed_by],
     )
@@ -827,15 +841,15 @@ class AnnotationRevision(Base):
     __table_args__ = (
         # History panel: all revisions for a token in chronological order
         Index("ix_revisions_token_timestamp", "token_id", "timestamp"),
-
         # Attribution: all changes by a user (contributor profile, Phase 3)
-        Index("ix_revisions_user_timestamp",  "changed_by", "timestamp"),
+        Index("ix_revisions_user_timestamp", "changed_by", "timestamp"),
     )
 
 
 # ══════════════════════════════════════════════════════════════
 # TABLE: validation_reports
 # ══════════════════════════════════════════════════════════════
+
 
 class ValidationReport(Base):
     """
@@ -858,6 +872,7 @@ class ValidationReport(Base):
         WARNING — non-blocking; exported with a comment in the CoNLL-U file
         INFO    — advisory; not exported
     """
+
     __tablename__ = "validation_reports"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)

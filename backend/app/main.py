@@ -5,13 +5,11 @@ FastAPI application entry point with middleware and route setup.
 """
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1 import router as api_v1_router
 from app.config import settings
 from app.logging_config import logger
-from app.middleware import setup_middleware, setup_exception_handlers
-from app.api.v1 import router as api_v1_router
-
+from app.middleware import setup_exception_handlers, setup_middleware
 
 # Create FastAPI application
 app = FastAPI(
@@ -35,8 +33,7 @@ app.include_router(api_v1_router.router)
 async def startup_event():
     """Initialize app on startup."""
     logger.info(
-        f"🚀 LingPen API starting in {settings.environment} mode "
-        f"(debug={settings.debug})"
+        f"🚀 LingPen API starting in {settings.environment} mode " f"(debug={settings.debug})"
     )
 
 
@@ -58,7 +55,7 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",

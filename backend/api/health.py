@@ -2,9 +2,10 @@
 backend/api/health.py
 Minimal health check endpoint used by CI and the Hetzner deploy script.
 """
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 

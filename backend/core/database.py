@@ -42,7 +42,7 @@ engine = create_async_engine(
     pool_size=10,
     max_overflow=5,
     pool_timeout=30,
-    pool_recycle=1800,   # recycle connections every 30 min (avoid stale conn issues)
+    pool_recycle=1800,  # recycle connections every 30 min (avoid stale conn issues)
     echo=os.environ.get("ENVIRONMENT") == "development",  # SQL logging in dev only
 )
 
@@ -50,7 +50,7 @@ AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,  # objects remain usable after commit (important for async)
-    autoflush=False,         # flush explicitly; prevents surprise queries mid-request
+    autoflush=False,  # flush explicitly; prevents surprise queries mid-request
 )
 
 
