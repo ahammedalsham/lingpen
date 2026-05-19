@@ -4,7 +4,6 @@ backend/app/services/user_service.py
 Business logic for user management operations.
 """
 
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
